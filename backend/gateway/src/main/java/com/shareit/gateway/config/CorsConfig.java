@@ -18,9 +18,13 @@ public class CorsConfig {
 
         config.setAllowedOrigins(List.of(
                 "http://localhost:3000",
-                "http://localhost:5173"
+                "http://localhost:5173",
+                "https://barrier-continuing-small-milan.trycloudflare.com", // ✅ your backend tunnel
+                "https://*.trycloudflare.com"  // ✅ allow all cloudflare tunnels
         ));
 
+
+        config.setAllowedOriginPatterns(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

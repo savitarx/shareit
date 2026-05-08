@@ -1,0 +1,113 @@
+name: shareit
+
+services:
+
+  # ── PostgreSQL ──────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: shareit-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 2002
+      POSTGRES_DB: shareit
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - shareit-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]   # ✅ fixed user
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Eureka ──────────────────────────────────────────────────
+  eureka:
+    build: ./backend/registry
+    container_name: shareit-registry
+    ports:
+      - "8761:8761"
+    networks:
+      - shareit-net
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8761/actuator/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # ── Auth Service ─────────────────────────────────────────────
+  auth:
+    build: ./backend/auth
+    container_name: shareit-auth
+    ports:
+      - "8081:8001"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shareit
+      SPRING_DATASOURCE_USERNAME: postgres        # ✅ fixed
+      SPRING_DATASOURCE_PASSWORD: 2002            # ✅ fixed
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+      SPRING_MAIL_USERNAME: wechat20260205@gmail.com
+      SPRING_MAIL_PASSWORD: pspy inep vjvi vonk
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+    networks:
+      - shareit-net
+
+  # ── Chat Service ─────────────────────────────────────────────
+  chat:
+    build: ./backend/chat
+    container_name: shareit-chat
+    ports:
+      - "8082:8002"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shareit
+      SPRING_DATASOURCE_USERNAME: postgres        # ✅ fixed
+      SPRING_DATASOURCE_PASSWORD: 2002            # ✅ fixed
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eureka:
+        condition: service_healthy
+    networks:
+      - shareit-net
+
+  # ── Gateway ──────────────────────────────────────────────────
+  gateway:
+    build: ./backend/gateway
+    container_name: shareit-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka:8761/eureka/
+    depends_on:
+      eureka:
+        condition: service_healthy
+      auth:
+        condition: service_started
+      chat:
+        condition: service_started
+    networks:
+      - shareit-net
+
+  # ── Frontend ─────────────────────────────────────────────────
+  frontend:
+    build: ./frontend/frontend
+    container_name: shareit-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - gateway
+    networks:
+      - shareit-net
+
+networks:
+  shareit-net:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -1,13 +1,17 @@
-const BASE = 'http://localhost:8000';
+//const BASE = 'http://localhost:8000';
+
+
+const BASE = 'https://inserted-reed-alfred-amended.trycloudflare.com';
 
 export const getToken = () => localStorage.getItem('shareit_token');
-
 async function request(path, options = {}) {
   const token = getToken();
   const res = await fetch(`${BASE}${path}`, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      'ngrok-skip-browser-warning': 'true',   // ← add this
+      'bypass-tunnel-reminder': 'true',        // ← add this for cloudflare
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },

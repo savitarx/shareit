@@ -36,6 +36,13 @@ public class RoomController {
         }
     }
 
+
+    // write the logic for leaving the room
+    @PostMapping("/leave")
+    public ResponseEntity<?> leave(){
+        return new ResponseEntity<>(null);
+    }
+
     @GetMapping("/{roomCode}/messages")
     public List<Message> getMessages (@PathVariable String roomCode){
         return chat.getMessages(roomCode);

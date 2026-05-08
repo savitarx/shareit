@@ -1,7 +1,13 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { Client } from '@stomp/stompjs';
 
-const WS_URL = 'ws://localhost:8000/chat/ws';
+//const WS_URL = 'ws://localhost:8000/chat/ws';
+
+const WS_URL = 'wss://inserted-reed-alfred-amended.trycloudflare.com/chat/ws';
+
+
+
+
 
 export function useStompChat(roomCode, token) {
   const clientRef  = useRef(null);
@@ -10,6 +16,9 @@ export function useStompChat(roomCode, token) {
   const [messages,   setMessages]   = useState([]);
   const [typingUser, setTypingUser] = useState('');
   const[members,setMembers]=useState([])
+
+
+  
 
   useEffect(() => {
     if (!roomCode || !token) return;
